@@ -1,13 +1,14 @@
 <template>
-  <br>
   <div class="flex items-center justify-center ">
     <div class="flex border-2 border-gray-200 rounded">
-        <input type="text" class="px-4 py-2 w-80" placeholder="Search...">
+        <input type="text" class="px-4 py-2 w-80" placeholder="Search..." v-model="search">
         <button class="px-4 text-white bg-blue-400 border-l ">
             Search
         </button>
     </div>
 </div>
+  <br>
+ 
 <br>
   <div class="w-full">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -38,7 +39,7 @@
 
 <script lang="ts" setup>
   import axios from "axios";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { type Data, type GetAnimes } from "./types/images.types";
 import { paginate } from './utils';
 import PaginationGlobal from './components/search.vue';
@@ -61,8 +62,8 @@ const pagination = ref<Pagination>({
   total: 0
 });
 
-const get_animes = async (page = 1, limit = 6) => {
-  axios.get<GetAnimes>(`https://api.jikan.moe/v4/anime?page=${page}&limit=${limit}`).then(({data}) => {
+const get_animes = async (page = 1, limit = 6, q:string) => {
+  axios.get<GetAnimes>(`https://api.jikan.moe/v4/anime?page=${page}&limit=${limit}&q=${q}`).then(({data}) => {
     animes.value = data.data;
     pagination.value = {
       pages: paginate(data.pagination.current_page,data.pagination.last_visible_page,1),
@@ -74,11 +75,18 @@ const get_animes = async (page = 1, limit = 6) => {
   });
 };
 
+const search = ref("")
+
 const on_change_page = (page: number) => {
-  get_animes(page);
+  get_animes(page, 6, search.value);
 }
 
 onMounted(async () => {
- await get_animes();
+ await get_animes(1, 6, search.value);
 })
+
+watch(search, async()=>{
+  get_animes(1, 6, search.value)
+})
+
 </script>
